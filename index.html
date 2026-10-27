@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우주 탐사 오디세이: 태양계의 비밀 (중1 과학 고급버전)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Noto Sans KR & Orbitron -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#050814',
+                            card: '#0f172a',
+                            border: '#1e293b',
+                            neonBlue: '#38bdf8',
+                            neonGreen: '#34d399',
+                            neonPurple: '#c084fc',
+                            neonYellow: '#fde047',
+                            neonOrange: '#fb923c'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                        orbitron: ['Orbitron', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050814;
+            color: #f1f5f9;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        
+        .neon-glow-blue {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            border-color: #38bdf8;
+        }
+
+        .neon-glow-green {
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.4);
+            border-color: #34d399;
+        }
+
+        .neon-glow-orange {
+            box-shadow: 0 0 15px rgba(251, 146, 60, 0.4);
+            border-color: #fb923c;
+        }
+
+        .neon-text-blue {
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+        }
+
+        .cyber-glass {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+
+        .scanline {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.35) 50%,
+                rgba(0, 0, 0, 0.35)
+            );
+            background-size: 100% 4px;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-certificate, #printable-certificate * {
+                visibility: visible;
+            }
+            #printable-certificate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white !important;
+                color: black !important;
+                border: 8px double #0284c7 !important;
+                padding: 40px !important;
+                box-sizing: border-box;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans relative">
+
+    <!-- Starfield Canvas -->
+    <canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-60"></canvas>
+    
+    <!-- CRT Scanline Effect -->
+    <div class="fixed inset-0 pointer-events-none z-10 scanline opacity-25"></div>
+
+    <!-- MAIN CONTAINER -->
+    <div id="app" class="relative z-20 min-h-screen flex flex-col justify-between p-3 md:p-6 max-w-6xl mx-auto w-full">
+
+        <!-- TOP HUD BAR -->
+        <header id="hud-header" class="hidden cyber-glass rounded-xl p-4 mb-4 flex flex-wrap justify-between items-center gap-4 transition-all duration-300">
+            <div class="flex items-center space-x-3">
+                <div class="bg-sky-950/80 border border-sky-500 rounded-lg p-2.5 text-center min-w-[120px]">
+                    <span class="text-xs text-sky-400 block font-orbitron">EXPLORER TEAM</span>
+                    <span id="hud-team-name" class="font-bold text-sm md:text-base text-sky-200 truncate max-w-[140px] block">태양계 탐사대</span>
+                </div>
+                <div class="hidden md:flex flex-col text-xs text-gray-400">
+                    <span class="text-gray-400">탐사 대원:</span>
+                    <span id="hud-members-list" class="text-sky-300 font-medium">대원1, 대원2, 대원3, 대원4</span>
+                </div>
+            </div>
+
+            <!-- Timer Display -->
+            <div class="flex items-center space-x-2 bg-slate-900 border border-amber-500/50 rounded-lg px-4 py-2 neon-glow-orange">
+                <i class="fa-solid fa-stopwatch text-amber-400 text-lg animate-pulse"></i>
+                <div>
+                    <div class="text-[10px] text-amber-400 font-orbitron">MISSION ELAPSED TIME</div>
+                    <div id="hud-timer" class="font-orbitron font-bold text-xl md:text-2xl text-amber-400 tracking-wider">00:00.0</div>
+                </div>
+            </div>
+
+            <!-- Stage Progress & Tools -->
+            <div class="flex items-center space-x-3">
+                <div class="text-right">
+                    <div class="text-xs text-gray-400">탐사 프로토콜</div>
+                    <div id="hud-stage-text" class="font-orbitron font-bold text-sky-400 text-sm md:text-base">STAGE 1 / 5</div>
+                </div>
+                <button id="btn-audio-toggle" onclick="toggleAudio()" class="w-10 h-10 rounded-lg bg-slate-800 border border-sky-500/40 text-sky-400 hover:bg-sky-900/50 transition flex items-center justify-center">
+                    <i id="audio-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+                <button id="btn-hint" onclick="openHintModal()" class="px-3 py-2 rounded-lg bg-amber-500/20 border border-amber-500 text-amber-300 font-bold hover:bg-amber-500/30 transition flex items-center space-x-1">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span class="text-xs md:text-sm">힌트 (<span id="hud-hint-count">0</span>/3)</span>
+                </button>
+            </div>
+
+            <!-- Stage Progress Bar -->
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1">
+                <div id="hud-progress-bar" class="bg-gradient-to-r from-sky-500 via-indigo-400 to-amber-400 h-full w-[20%] transition-all duration-500"></div>
+            </div>
+        </header>
+
+        <!-- SCREEN 1: TEAM REGISTRATION & BRIEFING -->
+        <main id="screen-setup" class="cyber-glass rounded-2xl p-6 md:p-10 my-auto shadow-2xl relative overflow-hidden">
+            <div class="text-center mb-8">
+                <div class="inline-block px-3 py-1 bg-sky-950 border border-sky-400/50 rounded-full text-sky-300 text-xs font-orbitron tracking-widest mb-3">
+                    MIDDLE SCHOOL SCIENCE ADVANCED MISSION: SOLAR SYSTEM
+                </div>
+                <h1 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-amber-300 font-orbitron mb-2 neon-text-blue">
+                    SPACE ODYSSEY: 태양계의 비밀
+                </h1>
+                <p class="text-gray-300 text-sm md:text-base max-w-2xl mx-auto">
+                    심우주 탐사선 OMEGA-1호가 태양계 중앙 관측소에서 고난도 정밀 보안 모드에 잠겼습니다! <br class="hidden sm:block">
+                    중학교 1학년 과학 <strong class="text-sky-300">[태양계]</strong> 탐구 개념을 정밀하게 적용하여 5단계 시스템 암호를 해독하세요!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <!-- Mission Briefing Box -->
+                <div class="bg-slate-900/80 rounded-xl p-5 border border-sky-500/30">
+                    <h2 class="text-lg font-bold text-sky-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-shuttle-space text-amber-400"></i> 미션 브리핑 & 심화 탐구 수칙
+                    </h2>
+                    <ul class="space-y-2.5 text-xs md:text-sm text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-sky-400 font-bold">•</span>
+                            <span><strong>4인 1모둠</strong> 심화 협동 탐사 미션입니다. 정확한 질문 분석과 토론이 필요합니다.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-sky-400 font-bold">•</span>
+                            <span>각 문제에는 과학적 수치, 분류 기준, 물리적 특성이 종합적으로 적용됩니다.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-sky-400 font-bold">•</span>
+                            <span>입력창은 입력 결과를 한눈에 확인할 수 있도록 일반 텍스트 형태로 제공됩니다.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-sky-400 font-bold">•</span>
+                            <span>탐사 완수 후 <strong>탐사 마스터 수료증</strong>과 <strong>개념 요약 리포트</strong>를 바로 출력할 수 있습니다.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Team Form -->
+                <form id="form-setup" onsubmit="startGame(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-sky-300 mb-1">
+                            <i class="fa-solid fa-users text-sky-400 mr-1"></i> 탐사 모둠 이름 (4인 모둠)
+                        </label>
+                        <input type="text" id="input-team-name" required placeholder="예: 은하수 탐사대" 
+                            class="w-full bg-slate-900 border border-sky-500/50 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 text-sm">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-1">대원 1 (탐사대장)</label>
+                            <input type="text" id="member-1" required placeholder="이름 입력" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-sky-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-1">대원 2 (천문분석관)</label>
+                            <input type="text" id="member-2" required placeholder="이름 입력" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-sky-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-1">대원 3 (항법조작관)</label>
+                            <input type="text" id="member-3" required placeholder="이름 입력" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-sky-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-1">대원 4 (통신기록관)</label>
+                            <input type="text" id="member-4" required placeholder="이름 입력" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-sky-400 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 mt-2 bg-gradient-to-r from-sky-500 via-indigo-500 to-amber-500 hover:from-sky-400 hover:to-amber-400 text-slate-950 font-black text-lg rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 font-orbitron tracking-wider flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rocket"></i> 탐사 미션 개시 (LAUNCH MISSION)
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <!-- SCREEN 2: GAME STAGE CONTAINER -->
+        <main id="screen-game" class="hidden cyber-glass rounded-2xl p-4 md:p-8 my-auto relative shadow-2xl min-h-[520px] flex flex-col justify-between">
+            <div id="stage-content-area" class="w-full"></div>
+            <div id="feedback-box" class="hidden mt-4 p-3 rounded-lg text-sm text-center font-bold transition-all duration-300"></div>
+        </main>
+
+        <!-- SCREEN 3: VICTORY & SUMMARY REPORT -->
+        <main id="screen-victory" class="hidden my-auto space-y-6">
+            <div class="cyber-glass rounded-2xl p-6 text-center border border-emerald-500/50 neon-glow-green">
+                <i class="fa-solid fa-trophy text-5xl text-amber-400 mb-3 animate-bounce"></i>
+                <h1 class="text-3xl md:text-5xl font-black text-emerald-300 font-orbitron mb-2">MISSION ACCOMPLISHED!</h1>
+                <p class="text-gray-200 text-sm md:text-base">축하합니다! 대원 모두의 협동으로 태양계 심화 탐사 미션을 성공적으로 완수했습니다!</p>
+                
+                <div class="mt-6 inline-flex flex-wrap items-center justify-center gap-4 bg-slate-900/90 border border-emerald-500/40 px-6 py-3 rounded-xl">
+                    <div>
+                        <span class="text-xs text-gray-400 block">최종 탐사 시간</span>
+                        <span id="victory-final-time" class="text-2xl font-bold font-orbitron text-sky-300">00:00.0</span>
+                    </div>
+                    <div class="h-8 w-px bg-slate-700"></div>
+                    <div>
+                        <span class="text-xs text-gray-400 block">사용 힌트 수</span>
+                        <span id="victory-hint-count" class="text-2xl font-bold font-orbitron text-amber-400">0 / 3</span>
+                    </div>
+                    <div class="h-8 w-px bg-slate-700"></div>
+                    <div>
+                        <span class="text-xs text-gray-400 block">탐사 등급</span>
+                        <span id="victory-grade" class="text-2xl font-black font-orbitron text-emerald-400">S CLASS</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-wrap justify-center gap-3 no-print">
+                    <button onclick="window.print()" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-sm flex items-center gap-2 transition">
+                        <i class="fa-solid fa-print"></i> 수료증 및 리포트 인쇄/PDF 저장
+                    </button>
+                    <button onclick="openConceptModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm flex items-center gap-2 transition">
+                        <i class="fa-solid fa-book-open"></i> 태양계 핵심 개념 총정리
+                    </button>
+                    <button onclick="restartGame()" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg text-sm flex items-center gap-2 transition">
+                        <i class="fa-solid fa-rotate-right"></i> 다시 도전하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- PRINTABLE CERTIFICATE CARD -->
+            <div id="printable-certificate" class="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+                <div class="text-center border-b border-slate-700 pb-6 mb-6">
+                    <div class="text-emerald-400 text-xs tracking-widest font-orbitron font-bold mb-1">[교육용 우주 탐사 방탈출 마스터 수료증]</div>
+                    <h2 class="text-3xl font-black text-white font-orbitron">태양계 탐사 심화 마스터 인증서</h2>
+                    <p class="text-gray-400 text-xs mt-1">CERTIFICATE OF SOLAR SYSTEM EXPLORATION EXCELLENCE</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-300">
+                    <div class="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                        <p><strong class="text-sky-400">모둠명:</strong> <span id="cert-team-name" class="text-white font-bold"></span></p>
+                        <p><strong class="text-sky-400">탐사 대원:</strong> <span id="cert-members" class="text-white"></span></p>
+                        <p><strong class="text-sky-400">탐구 단원:</strong> 중학교 1학년 과학 - [태양계]</p>
+                        <p><strong class="text-sky-400">수료 일자:</strong> <span id="cert-date" class="text-white"></span></p>
+                    </div>
+                    <div class="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                        <p><strong class="text-emerald-400">성취 기준 달성도:</strong> <span class="text-emerald-300 font-bold">최우수 (Pass)</span></p>
+                        <p><strong class="text-emerald-400">주요 습득 역량:</strong></p>
+                        <ul class="list-disc list-inside text-xs text-gray-400 space-y-1 pl-1">
+                            <li>태양계 구성원(항성, 행성, 위성, 소행성, 왜소행성, 혜성) 정밀 구분</li>
+                            <li>지구형/목성형 행성의 물리적 물리량(질량, 반지름, 밀도, 위성 수) 심화 분석</li>
+                            <li>태양 표면 구조 및 대기 현상(흑점, 쌀알무늬, 채층, 코로나, 홍염, 플레어) 분석</li>
+                            <li>수성~해왕성 8개 행성의 세부 지질학적·대기학적 특징 비교 탐구 완료</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-t border-slate-700 pt-6">
+                    <h3 class="text-base font-bold text-sky-300 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice"></i> 모둠 핵심 개념 학습 요약 리포트
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            <div class="font-bold text-sky-400 mb-1">1. 태양계 구성원</div>
+                            <p class="text-gray-400">• 항성: 스스로 빛을 냄(태양)<br>• 행성: 태양 주위 공전(8개)<br>• 위성: 행성 주위 공전(달 등)<br>• 소행성, 왜소행성, 혜성(꼬리 생성)</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            <div class="font-bold text-emerald-400 mb-1">2. 행성의 분류</div>
+                            <p class="text-gray-400">• 지구형: 수,금,지,화 (단단한 암석, 밀도 큼, 고리 없음)<br>• 목성형: 목,토,천,해 (기체 성분, 반지름/질량 큼, 밀도 작음, 고리/위성 많음)</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            <div class="font-bold text-amber-400 mb-1">3. 태양과 태양 활동</div>
+                            <p class="text-gray-400">• 표면: 쌀알무늬(대류), 흑점(주변보다 온도 낮음)<br>• 대기/활동: 채층, 코로나, 홍염(불꽃), 플레어(폭발) ➔ 오로라, 통신장애 영향</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center text-xs text-gray-500 border-t border-slate-800 pt-4 flex justify-between items-center">
+                    <span>중학교 과학 [태양계] 융합형 방탈출 시스템</span>
+                    <span class="font-orbitron text-sky-400/80">AUTHENTICATED BY SPACE SCIENCE ACADEMY</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="mt-6 text-center text-xs text-gray-500 border-t border-slate-800/80 pt-4 no-print">
+            중학교 1학년 과학 [태양계] 교육용 방탈출 웹 앱 | Space Odyssey Science Escape
+        </footer>
+    </div>
+
+    <!-- HINT MODAL -->
+    <div id="hint-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="cyber-glass rounded-2xl p-6 max-w-md w-full border border-amber-500/50 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb"></i> 스테이지 단서 힌트
+                </h3>
+                <button onclick="closeHintModal()" class="text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div id="hint-modal-body" class="space-y-3 text-sm text-gray-200"></div>
+            <div class="mt-6 text-right">
+                <button onclick="closeHintModal()" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg text-xs hover:bg-amber-400">
+                    닫기 (Close)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONCEPT SUMMARY MODAL -->
+    <div id="concept-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="cyber-glass rounded-2xl p-6 max-w-2xl w-full border border-sky-500/50 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                <h3 class="text-xl font-bold text-sky-300 flex items-center gap-2">
+                    <i class="fa-solid fa-book"></i> 중1 과학 [태양계] 핵심 총정리
+                </h3>
+                <button onclick="closeConceptModal()" class="text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-xs md:text-sm text-gray-300">
+                <div class="bg-slate-900 p-4 rounded-xl border border-sky-500/30">
+                    <h4 class="font-bold text-sky-400 text-base mb-1">1. 태양계의 구성원</h4>
+                    <p class="leading-relaxed">
+                        • <strong>항성:</strong> 스스로 빛을 냄(태양).<br>
+                        • <strong>행성:</strong> 태양 주위를 돎(수, 금, 지, 화, 목, 토, 천, 해 8개).<br>
+                        • <strong>위성:</strong> 행성 주위를 돎(달, 포보스, 데이모스, 갈릴레이 위성 등).<br>
+                        • <strong>소행성/왜소행성/혜성:</strong> 화성과 목성 사이 소행성대 분포, 명왕성(왜소행성), 혜성(얼음+먼지, 태양 접근 시 꼬리 형성).
+                    </p>
+                </div>
+
+                <div class="bg-slate-900 p-4 rounded-xl border border-emerald-500/30">
+                    <h4 class="font-bold text-emerald-400 text-base mb-1">2. 행성의 분류 (지구형 vs 목성형)</h4>
+                    <p class="leading-relaxed">
+                        • <strong>지구형 행성 (수, 금, 지, 화):</strong> 암석 표면, 질량/반지름 작음, 평균 밀도 큼, 고리 없음, 위성 없음/적음.<br>
+                        • <strong>목성형 행성 (목, 토, 천, 해):</strong> 기체 성분, 질량/반지름 큼, 평균 밀도 작음, 고리 존재, 위성 많음.
+                    </p>
+                </div>
+
+                <div class="bg-slate-900 p-4 rounded-xl border border-amber-500/30">
+                    <h4 class="font-bold text-amber-400 text-base mb-1">3. 태양의 표면과 대기/활동</h4>
+                    <p class="leading-relaxed">
+                        • <strong>표면(광구):</strong> 쌀알무늬(대류 현상), 흑점(주변보다 온도가 낮아 어둡게 보임).<br>
+                        • <strong>대기/활동:</strong> 채층(붉은색 얇은 대기), 코로나(청백색 희박한 대기), 홍염(솟구치는 불꽃), 플레어(순간 폭발).
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-right">
+                <button onclick="closeConceptModal()" class="px-5 py-2.5 bg-sky-600 text-white font-bold rounded-lg text-xs hover:bg-sky-500">
+                    확인 완료
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* State management */
+        const gameState = {
+            teamName: '',
+            members: [],
+            currentStage: 1,
+            startTime: null,
+            elapsedSeconds: 0,
+            timerInterval: null,
+            hintsUsed: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            audioMuted: false,
+            stageCompleted: [false, false, false, false, false]
+        };
+
+        /* Sound engine */
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtxClass) audioCtx = new AudioCtxClass();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (gameState.audioMuted) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                if (type === 'click') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(400, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'success') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.3);
+                    });
+                } else if (type === 'error') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'victory') {
+                    const notes = [293.66, 369.99, 440.00, 587.33, 739.99, 880.00];
+                    notes.forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.12);
+                        gain.gain.setValueAtTime(0.25, now + i * 0.12);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + i * 0.12);
+                        osc.stop(now + i * 0.12 + 0.5);
+                    });
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+        function toggleAudio() {
+            gameState.audioMuted = !gameState.audioMuted;
+            const icon = document.getElementById('audio-icon');
+            if (gameState.audioMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-red-400';
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-sky-400';
+                playSound('click');
+            }
+        }
+
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Star {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.alpha = Math.random() * 0.8 + 0.2;
+                this.speed = Math.random() * 0.02 + 0.005;
+                this.color = ['#ffffff', '#38bdf8', '#c084fc', '#fde047'][Math.floor(Math.random() * 4)];
+            }
+            update() {
+                this.alpha += Math.sin(Date.now() * this.speed) * 0.01;
+                if (this.alpha <= 0.1) this.alpha = 0.2;
+                if (this.alpha >= 0.9) this.alpha = 0.8;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.alpha;
+                ctx.fill();
+            }
+        }
+        for (let i = 0; i < 90; i++) stars.push(new Star());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(s => { s.update(); s.draw(); });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        /* Timer System */
+        function startTimer() {
+            gameState.startTime = Date.now();
+            gameState.timerInterval = setInterval(() => {
+                gameState.elapsedSeconds = (Date.now() - gameState.startTime) / 1000;
+                updateTimerDisplay();
+            }, 100);
+        }
+        function stopTimer() { clearInterval(gameState.timerInterval); }
+        function updateTimerDisplay() {
+            const totalSec = gameState.elapsedSeconds;
+            const mins = Math.floor(totalSec / 60);
+            const secs = Math.floor(totalSec % 60);
+            const ms = Math.floor((totalSec % 1) * 10);
+            document.getElementById('hud-timer').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${ms}`;
+        }
+
+        function startGame(e) {
+            e.preventDefault();
+            playSound('click');
+
+            const teamNameInput = document.getElementById('input-team-name').value.trim();
+            const m1 = document.getElementById('member-1').value.trim();
+            const m2 = document.getElementById('member-2').value.trim();
+            const m3 = document.getElementById('member-3').value.trim();
+            const m4 = document.getElementById('member-4').value.trim();
+
+            if (!teamNameInput || !m1 || !m2 || !m3 || !m4) {
+                alert('모둠 이름과 4명의 대원 이름을 모두 입력해주세요!');
+                return;
+            }
+
+            gameState.teamName = teamNameInput;
+            gameState.members = [m1, m2, m3, m4];
+
+            document.getElementById('hud-team-name').textContent = gameState.teamName;
+            document.getElementById('hud-members-list').textContent = gameState.members.join(', ');
+            
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('hud-header').classList.remove('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            startTimer();
+            loadStage(1);
+        }
+
+        function loadStage(stageNum) {
+            gameState.currentStage = stageNum;
+            document.getElementById('hud-stage-text').textContent = `STAGE ${stageNum} / 5`;
+            document.getElementById('hud-progress-bar').style.width = `${stageNum * 20}%`;
+            document.getElementById('hud-hint-count').textContent = gameState.hintsUsed[stageNum] || 0;
+            hideFeedback();
+
+            const area = document.getElementById('stage-content-area');
+            if (stageNum === 1) renderStage1(area);
+            else if (stageNum === 2) renderStage2(area);
+            else if (stageNum === 3) renderStage3(area);
+            else if (stageNum === 4) renderStage4(area);
+            else if (stageNum === 5) renderStage5(area);
+        }
+
+        function showFeedback(message, isSuccess) {
+            const fb = document.getElementById('feedback-box');
+            fb.classList.remove('hidden', 'bg-red-900/80', 'bg-emerald-900/80', 'text-red-200', 'text-emerald-200', 'border-red-500', 'border-emerald-500');
+            
+            if (isSuccess) {
+                fb.classList.add('bg-emerald-900/80', 'text-emerald-200', 'border', 'border-emerald-500');
+                fb.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> ${message}`;
+                playSound('success');
+            } else {
+                fb.classList.add('bg-red-900/80', 'text-red-200', 'border', 'border-red-500');
+                fb.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400 mr-2"></i> ${message}`;
+                playSound('error');
+            }
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback-box').classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           STAGE 1: 태양계 구성원 식별 프로토콜
+           ========================================================================== */
+        function renderStage1(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="border-b border-sky-500/30 pb-3 flex justify-between items-center">
+                        <div>
+                            <span class="text-xs text-sky-400 font-orbitron">EXPLORATION GATE 1</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-sun text-amber-400"></i> Stage 1: 태양계 구성원 정밀 식별
+                            </h2>
+                        </div>
+                        <span class="px-3 py-1 bg-sky-950 text-sky-300 border border-sky-500/40 rounded-full text-xs font-bold">천체 물리 분류</span>
+                    </div>
+
+                    <p class="text-sm text-gray-300 leading-relaxed">
+                        탐사선 센서에 포착된 4개 관측 데이터(A~D)의 천체 종류를 정확히 연결하고, <br class="hidden sm:block">
+                        <strong>천체 해독 공식</strong>에 따라 4자리 보안 암호를 계산하여 인가받으세요.
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                        <div class="space-y-3">
+                            <div class="p-3 bg-slate-900 rounded-xl border border-sky-500/30 text-xs space-y-1">
+                                <div class="font-bold text-amber-300">[데이터 A] 수소 핵융합 반응으로 스스로 빛을 내는 태양계 중심 천체</div>
+                                <select id="s1-select-a" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white mt-1">
+                                    <option value="">천체 종류 선택</option>
+                                    <option value="항성">항성</option>
+                                    <option value="행성">행성</option>
+                                    <option value="위성">위성</option>
+                                    <option value="혜성">혜성</option>
+                                </select>
+                            </div>
+
+                            <div class="p-3 bg-slate-900 rounded-xl border border-sky-500/30 text-xs space-y-1">
+                                <div class="font-bold text-sky-300">[데이터 B] 태양 주위를 공전하며 자체 중력으로 구형을 유지하는 8개의 주요 천체</div>
+                                <select id="s1-select-b" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white mt-1">
+                                    <option value="">천체 종류 선택</option>
+                                    <option value="항성">항성</option>
+                                    <option value="행성">행성</option>
+                                    <option value="위성">위성</option>
+                                    <option value="소행성">소행성</option>
+                                </select>
+                            </div>
+
+                            <div class="p-3 bg-slate-900 rounded-xl border border-sky-500/30 text-xs space-y-1">
+                                <div class="font-bold text-indigo-300">[데이터 C] 행성의 끌어당기는 힘에 의해 행성 주위를 공전하는 천체 (예: 달)</div>
+                                <select id="s1-select-c" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white mt-1">
+                                    <option value="">천체 종류 선택</option>
+                                    <option value="항성">항성</option>
+                                    <option value="행성">행성</option>
+                                    <option value="위성">위성</option>
+                                    <option value="왜소행성">왜소행성</option>
+                                </select>
+                            </div>
+
+                            <div class="p-3 bg-slate-900 rounded-xl border border-sky-500/30 text-xs space-y-1">
+                                <div class="font-bold text-purple-300">[데이터 D] 얼음과 먼지로 구성되어 태양에 가까워지면 얼음이 증발하여 꼬리가 생기는 천체</div>
+                                <select id="s1-select-d" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white mt-1">
+                                    <option value="">천체 종류 선택</option>
+                                    <option value="소행성">소행성</option>
+                                    <option value="왜소행성">왜소행성</option>
+                                    <option value="혜성">혜성</option>
+                                    <option value="위성">위성</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Decoder Logic Box -->
+                        <div class="bg-slate-900/90 p-5 rounded-xl border border-sky-500/40 space-y-4">
+                            <h3 class="text-sm font-bold text-sky-300 border-b border-slate-800 pb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-calculator"></i> 1차 암호 계산 가이드
+                            </h3>
+                            <div class="text-xs text-gray-300 space-y-2 bg-slate-950 p-3 rounded border border-slate-800">
+                                <p><strong class="text-amber-400">자리 1:</strong> 태양계 유일한 항성의 개수</p>
+                                <p><strong class="text-sky-400">자리 2:</strong> 태양계 행성의 총 개수</p>
+                                <p><strong class="text-indigo-400">자리 3:</strong> 지구의 위성(달)의 개수 + 화성의 위성(포보스, 데이모스) 개수 합계</p>
+                                <p><strong class="text-purple-400">자리 4:</strong> 혜성이 태양에 접근할 때 꼬리가 가리키는 방향 [태양 반대방향(5) / 태양 방향(1)]</p>
+                            </div>
+
+                            <div class="pt-2">
+                                <label class="block text-xs font-bold text-amber-300 mb-1">
+                                    계산된 4자리 암호 입력 (일반 텍스트)
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="s1-answer-input" placeholder="코드 입력" 
+                                        class="bg-slate-950 border border-sky-500/50 rounded-lg px-4 py-2 font-orbitron text-center text-sky-300 text-lg w-full focus:outline-none tracking-widest">
+                                    <button onclick="checkStage1()" class="px-5 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-lg text-sm transition">
+                                        승인
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkStage1() {
+            const a = document.getElementById('s1-select-a').value;
+            const b = document.getElementById('s1-select-b').value;
+            const c = document.getElementById('s1-select-c').value;
+            const d = document.getElementById('s1-select-d').value;
+            const inputVal = document.getElementById('s1-answer-input').value.trim();
+
+            if (a === '항성' && b === '행성' && c === '위성' && d === '혜성' && inputVal === '1835') {
+                showFeedback('1단계 탐사 승인 성공! [항성, 행성, 위성, 혜성] 천체 분류 검증 완료.', true);
+                gameState.stageCompleted[0] = true;
+                setTimeout(() => loadStage(2), 1200);
+            } else {
+                showFeedback('해독 오류! A~D 천체 종류 연결 및 암호 계산 공식을 다시 확인하세요.', false);
+            }
+        }
+
+        /* ==========================================================================
+           STAGE 2: 행성 분류하기 (지구형 vs 목성형 물리량 심화)
+           ========================================================================== */
+        function renderStage2(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="border-b border-sky-500/30 pb-3 flex justify-between items-center">
+                        <div>
+                            <span class="text-xs text-sky-400 font-orbitron">EXPLORATION GATE 2</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-arrows-split-up-and-left text-emerald-400"></i> Stage 2: 행성 분류 및 물리량 매트릭스
+                            </h2>
+                        </div>
+                        <span class="px-3 py-1 bg-emerald-950 text-emerald-300 border border-emerald-500/40 rounded-full text-xs font-bold">지구형 vs 목성형</span>
+                    </div>
+
+                    <p class="text-sm text-gray-300">
+                        8개 행성을 **지구형 행성**과 **목성형 행성**으로 분류하고 물리적 성질 분석 문항을 해결하세요.
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-emerald-500/30 space-y-3">
+                            <div class="text-xs font-bold text-emerald-400 flex justify-between">
+                                <span>[8대 행성 유형 분류 버튼]</span>
+                                <span>버튼을 눌러 '지구형' / '목성형' 지정</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                <button onclick="toggleS2Planet('수성')" id="s2-btn-수성" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    수성: <span id="s2-tag-수성" class="font-bold text-sky-300">미지정</span>
+                                </button>
+                                <button onclick="toggleS2Planet('금성')" id="s2-btn-금성" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    금성: <span id="s2-tag-금성" class="font-bold text-sky-300">미지정</span>
+                                </button>
+                                <button onclick="toggleS2Planet('지구')" id="s2-btn-지구" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    지구: <span id="s2-tag-지구" class="font-bold text-sky-300">미지정</span>
+                                </button>
+                                <button onclick="toggleS2Planet('화성')" id="s2-btn-화성" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    화성: <span id="s2-tag-화성" class="font-bold text-sky-300">미지정</span>
+                                </button>
+                                <button onclick="toggleS2Planet('목성')" id="s2-btn-목성" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    목성: <span id="s2-tag-목성" class="font-bold text-purple-300">미지정</span>
+                                </button>
+                                <button onclick="toggleS2Planet('토성')" id="s2-btn-토성" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    토성: <span id="s2-tag-토성" class="font-bold text-purple-300">미지정</span>
+                                </button>
+                                <button onclick="toggleS2Planet('천왕성')" id="s2-btn-천왕성" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    천왕성: <span id="s2-tag-천왕성" class="font-bold text-purple-300">미지정</span>
+                                </button>
+                                <button onclick="toggleS2Planet('해왕성')" id="s2-btn-해왕성" class="p-2.5 rounded-lg border border-slate-700 bg-slate-900 text-gray-300 hover:border-emerald-400">
+                                    해왕성: <span id="s2-tag-해왕성" class="font-bold text-purple-300">미지정</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Physics Data Comparison Quiz -->
+                        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700 space-y-4">
+                            <h3 class="text-sm font-bold text-emerald-300 border-b border-slate-800 pb-2">
+                                <i class="fa-solid fa-scale-balanced"></i> 물리적 특성 및 데이터 검증
+                            </h3>
+
+                            <div class="p-3 bg-slate-950 rounded border border-slate-800 text-xs space-y-2">
+                                <div class="text-gray-300">
+                                    <strong>[질문 A]</strong> 지구형 행성은 목성형 행성에 비해 <strong>평균 밀도</strong>가 ( <strong>크다</strong> / 작다 ).
+                                </div>
+                                <div class="text-gray-300">
+                                    <strong>[질문 B]</strong> 목성형 행성만 가진 공통적인 특징으로 옳은 번호는?
+                                </div>
+                                <div class="pl-2 text-gray-400 space-y-0.5">
+                                    <div>① 표면이 단단한 암석으로 이루어져 있다.</div>
+                                    <div>② 위성의 수가 없거나 매우 적다.</div>
+                                    <div>③ 고리가 존재하고 위성의 수가 많다.</div>
+                                    <div>④ 평균 밀도가 물보다 훨씬 크다.</div>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <label class="block text-xs font-bold text-emerald-300 mb-1">
+                                    2차 암호 입력 ([질문 B의 정답 번호] + [지구형 행성 수] + [목성형 행성 수])
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="s2-answer-input" placeholder="숫자 입력" 
+                                        class="bg-slate-950 border border-emerald-500/50 rounded-lg px-4 py-2 font-orbitron text-center text-emerald-300 text-lg w-full focus:outline-none tracking-widest">
+                                    <button onclick="checkStage2()" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-sm transition">
+                                        분류 승인
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            s2Planets = {
+                '수성': '미지정', '금성': '미지정', '지구': '미지정', '화성': '미지정',
+                '목성': '미지정', '토성': '미지정', '천왕성': '미지정', '해왕성': '미지정'
+            };
+        }
+
+        let s2Planets = {};
+
+        function toggleS2Planet(name) {
+            playSound('click');
+            const curr = s2Planets[name];
+            let next = '지구형';
+            if (curr === '지구형') next = '목성형';
+            else if (curr === '목성형') next = '지구형';
+
+            s2Planets[name] = next;
+            const tag = document.getElementById(`s2-tag-${name}`);
+            const btn = document.getElementById(`s2-btn-${name}`);
+
+            tag.textContent = next;
+            if (next === '지구형') {
+                btn.className = 'p-2.5 rounded-lg border border-sky-400 bg-sky-950/60 text-sky-200';
+            } else {
+                btn.className = 'p-2.5 rounded-lg border border-purple-400 bg-purple-950/60 text-purple-200';
+            }
+        }
+
+        function checkStage2() {
+            const inputVal = document.getElementById('s2-answer-input').value.trim();
+
+            const isEarthTypeCorrect = s2Planets['수성'] === '지구형' && s2Planets['금성'] === '지구형' && s2Planets['지구'] === '지구형' && s2Planets['화성'] === '지구형';
+            const isJupiterTypeCorrect = s2Planets['목성'] === '목성형' && s2Planets['토성'] === '목성형' && s2Planets['천왕성'] === '목성형' && s2Planets['해왕성'] === '목성형';
+
+            if (isEarthTypeCorrect && isJupiterTypeCorrect && inputVal === '344') {
+                showFeedback('분류 성공! (수,금,지,화=지구형 / 목,토,천,해=목성형) 및 물리량 특징 확인 완료!', true);
+                gameState.stageCompleted[1] = true;
+                setTimeout(() => loadStage(3), 1200);
+            } else {
+                showFeedback('분류 오류! 8개 행성 지정 상태 및 [질문 B 번호(3) + 지구형(4) + 목성형(4)] 암호를 다시 확인하세요.', false);
+            }
+        }
+
+        /* ==========================================================================
+           STAGE 3: 태양과 태양 활동 (표면 & 대기/활동 심화)
+           ========================================================================== */
+        function renderStage3(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="border-b border-sky-500/30 pb-3 flex justify-between items-center">
+                        <div>
+                            <span class="text-xs text-sky-400 font-orbitron">EXPLORATION GATE 3</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-fire-flame-curved text-amber-500"></i> Stage 3: 태양 표면 및 대기 활동 관측
+                            </h2>
+                        </div>
+                        <span class="px-3 py-1 bg-amber-950 text-amber-300 border border-amber-500/40 rounded-full text-xs font-bold">광구 & 대기 현상</span>
+                    </div>
+
+                    <p class="text-sm text-gray-300">
+                        태양 망원경 시뮬레이터를 조작하여 광구(표면)와 대기 활동 현상을 분석하고 보안 승인 코드를 확보하세요.
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                        <!-- Telescope View -->
+                        <div class="bg-slate-950 p-5 rounded-xl border border-amber-500/30 flex flex-col items-center space-y-3">
+                            <div class="text-xs text-amber-300 font-bold flex justify-between w-full">
+                                <span>[SOLAR SCOPE OBSERVER]</span>
+                                <span id="s3-scope-mode">관측 모드: 광구 (표면)</span>
+                            </div>
+
+                            <div class="relative w-48 h-48 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 p-1 flex items-center justify-center shadow-2xl border-4 border-amber-400/50">
+                                <div id="s3-sun-display" class="w-full h-full rounded-full bg-amber-500 relative overflow-hidden flex items-center justify-center">
+                                    <div class="absolute top-10 left-12 w-4 h-3 bg-stone-900 rounded-full blur-[1px]"></div>
+                                    <div class="absolute bottom-12 right-14 w-6 h-4 bg-stone-900 rounded-full blur-[1px]"></div>
+                                    <div class="text-[10px] text-amber-900 font-mono opacity-40 select-none">••••••••••<br>••••••••••<br>••••••••••</div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 w-full justify-center text-xs">
+                                <button onclick="setS3ScopeMode('surface')" class="px-3 py-1.5 bg-amber-950 border border-amber-500 text-amber-300 rounded hover:bg-amber-900">표면 관측 (광구)</button>
+                                <button onclick="setS3ScopeMode('atmosphere')" class="px-3 py-1.5 bg-red-950 border border-red-500 text-red-300 rounded hover:bg-red-900">대기/활동 관측</button>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Panel -->
+                        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700 space-y-4">
+                            <h3 class="text-sm font-bold text-amber-300 border-b border-slate-800 pb-2">
+                                <i class="fa-solid fa-list-check"></i> 관측 데이터 분석 매칭
+                            </h3>
+                            
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block text-gray-300 font-bold mb-1">1) 태양 표면(광구)에서 주변보다 온도가 낮아 어둡게 보이는 현상은?</label>
+                                    <select id="s3-q1" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+                                        <option value="">선택</option>
+                                        <option value="쌀알무늬">쌀알무늬</option>
+                                        <option value="흑점">흑점</option>
+                                        <option value="코로나">코로나</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-gray-300 font-bold mb-1">2) 광구 바로 위의 붉은색 얇은 대기층은?</label>
+                                    <select id="s3-q2" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+                                        <option value="">선택</option>
+                                        <option value="채층">채층</option>
+                                        <option value="코로나">코로나</option>
+                                        <option value="홍염">홍염</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-gray-300 font-bold mb-1">3) 흑점 인근에서 대폭발이 일어나 순간적으로 수많은 에너지가 방출되는 현상은?</label>
+                                    <select id="s3-q3" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+                                        <option value="">선택</option>
+                                        <option value="쌀알무늬">쌀알무늬</option>
+                                        <option value="홍염">홍염</option>
+                                        <option value="플레어">플레어</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <label class="block text-xs font-bold text-amber-300 mb-1">
+                                    3차 승인 코드 입력 (태양의 영문 'SUN' + 흑점 주기 수치 '11')
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="s3-answer-input" placeholder="코드 입력" 
+                                        class="bg-slate-950 border border-amber-500/50 rounded-lg px-4 py-2 font-orbitron text-center text-amber-300 text-lg w-full focus:outline-none tracking-widest">
+                                    <button onclick="checkStage3()" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-sm transition">
+                                        승인
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setS3ScopeMode(mode) {
+            playSound('click');
+            const display = document.getElementById('s3-sun-display');
+            const textMode = document.getElementById('s3-scope-mode');
+
+            if (mode === 'surface') {
+                textMode.textContent = '관측 모드: 광구 (흑점 / 쌀알무늬)';
+                display.className = 'w-full h-full rounded-full bg-amber-500 relative overflow-hidden flex items-center justify-center';
+            } else {
+                textMode.textContent = '관측 모드: 대기/활동 (채층 / 코로나 / 홍염 / 플레어)';
+                display.className = 'w-full h-full rounded-full bg-gradient-to-r from-red-600 via-orange-600 to-amber-700 relative overflow-hidden flex items-center justify-center border-4 border-amber-300 animate-pulse';
+            }
+        }
+
+        function checkStage3() {
+            const q1 = document.getElementById('s3-q1').value;
+            const q2 = document.getElementById('s3-q2').value;
+            const q3 = document.getElementById('s3-q3').value;
+            const inputVal = document.getElementById('s3-answer-input').value.trim();
+
+            if (q1 === '흑점' && q2 === '채층' && q3 === '플레어' && inputVal.toUpperCase() === 'SUN11') {
+                showFeedback('승인 성공! 태양의 표면(흑점) 및 대기/활동(채층, 플레어) 현상 분석 완수!', true);
+                gameState.stageCompleted[2] = true;
+                setTimeout(() => loadStage(4), 1200);
+            } else {
+                showFeedback('분석 오류! 태양 현상 선택(흑점, 채층, 플레어) 및 승인 코드(SUN11)를 확인하세요.', false);
+            }
+        }
+
+        /* ==========================================================================
+           STAGE 4: 태양계 8대 행성 특성 프로파일
+           ========================================================================== */
+        function renderStage4(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="border-b border-sky-500/30 pb-3 flex justify-between items-center">
+                        <div>
+                            <span class="text-xs text-sky-400 font-orbitron">EXPLORATION GATE 4</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-planet-ringed text-purple-400"></i> Stage 4: 8대 행성 고유 지질·대기 프로파일
+                            </h2>
+                        </div>
+                        <span class="px-3 py-1 bg-purple-950 text-purple-300 border border-purple-500/40 rounded-full text-xs font-bold">행성 고유 특성</span>
+                    </div>
+
+                    <p class="text-sm text-gray-300">
+                        심우주 탐사선이 전송한 4개의 핵심 행성 탐사 로그를 분석하여 해당 행성을 매칭하세요.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-purple-500/30 space-y-2">
+                            <div class="font-bold text-purple-300">[로그 A] 두꺼운 이산화탄소 대기로 강한 온실효과 발생, 표면 기압 90기압, 높은 표면 온도</div>
+                            <select id="s4-planet-a" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                                <option value="">행성 선택</option>
+                                <option value="수성">수성</option>
+                                <option value="금성">금성</option>
+                                <option value="화성">화성</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-slate-900 p-4 rounded-xl border border-purple-500/30 space-y-2">
+                            <div class="font-bold text-purple-300">[로그 B] 표면이 붉은 산화 철 토양으로 이루어짐, 과거 물이 흐른 흔적과 극관(드라이아이스+얼음) 존재</div>
+                            <select id="s4-planet-b" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                                <option value="">행성 선택</option>
+                                <option value="지구">지구</option>
+                                <option value="화성">화성</option>
+                                <option value="목성">목성</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-slate-900 p-4 rounded-xl border border-purple-500/30 space-y-2">
+                            <div class="font-bold text-purple-300">[로그 C] 평균 밀도가 물보다 작아 물에 뜰 수 있으며, 얼음과 먼지로 된 뚜렷하고 아름다운 고리가 존재</div>
+                            <select id="s4-planet-c" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                                <option value="">행성 선택</option>
+                                <option value="목성">목성</option>
+                                <option value="토성">토성</option>
+                                <option value="천왕성">천왕성</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-slate-900 p-4 rounded-xl border border-purple-500/30 space-y-2">
+                            <div class="font-bold text-purple-300">[로그 D] 자전축이 거의 누운 채로 공전하며, 메테인 대기로 인해 청록색으로 보이는 행성</div>
+                            <select id="s4-planet-d" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                                <option value="">행성 선택</option>
+                                <option value="천왕성">천왕성</option>
+                                <option value="해왕성">해왕성</option>
+                                <option value="목성">목성</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/90 p-4 rounded-xl border border-purple-500/50 text-center space-y-2">
+                        <label class="block text-xs font-bold text-amber-300">
+                            4차 행성 프로파일 암호 입력 ([로그 A] 행성의 영문 이름)
+                        </label>
+                        <div class="flex justify-center gap-2 max-w-xs mx-auto">
+                            <input type="text" id="s4-answer-input" placeholder="영문 이름 입력" 
+                                class="bg-slate-950 border border-purple-500 rounded-lg px-4 py-2 font-orbitron text-center text-purple-300 font-bold text-lg w-full focus:outline-none tracking-widest">
+                            <button onclick="checkStage4()" class="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg text-sm transition">
+                                인증
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkStage4() {
+            const pa = document.getElementById('s4-planet-a').value;
+            const pb = document.getElementById('s4-planet-b').value;
+            const pc = document.getElementById('s4-planet-c').value;
+            const pd = document.getElementById('s4-planet-d').value;
+            const inputVal = document.getElementById('s4-answer-input').value.trim();
+
+            if (pa === '금성' && pb === '화성' && pc === '토성' && pd === '천왕성' && inputVal.toUpperCase() === 'VENUS') {
+                showFeedback('행성 분석 성공! (금성-화성-토성-천왕성) 프로파일 승인 완료.', true);
+                gameState.stageCompleted[3] = true;
+                setTimeout(() => loadStage(5), 1200);
+            } else {
+                showFeedback('특성 오류! 행성 선택 상태 및 [로그 A] 행성의 영문 이름을 다시 확인하세요.', false);
+            }
+        }
+
+        /* ==========================================================================
+           STAGE 5: 최종 지구 생환 마스터 오버라이드
+           ========================================================================== */
+        function renderStage5(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="border-b border-red-500/40 pb-3 flex justify-between items-center">
+                        <div>
+                            <span class="text-xs text-red-400 font-orbitron">FINAL OVERRIDE GATE</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-red-500 animate-pulse"></i> Stage 5: 지구 생환 워프 제어 서킷
+                            </h2>
+                        </div>
+                        <span class="px-3 py-1 bg-red-950 text-red-300 border border-red-500/40 rounded-full text-xs font-bold animate-pulse">최종 워프</span>
+                    </div>
+
+                    <p class="text-sm text-gray-300">
+                        워프 엔진 가동을 위해 태양계 종합 과학 개념 조건 3가지를 선택하고, <strong>4자리 마스터 비상 해독 키</strong>를 완성하세요.
+                    </p>
+
+                    <div class="bg-slate-950 p-5 rounded-xl border border-red-500/30 space-y-4">
+                        <h3 class="text-sm font-bold text-red-400 border-b border-slate-800 pb-2">
+                            [지구 워프 승인 서킷 3대 조건]
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="bg-slate-900 p-3 rounded border border-slate-800 space-y-2">
+                                <div class="font-bold text-sky-300">[조건 1] 태양계 행성의 총 개수는?</div>
+                                <select id="s5-c1" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+                                    <option value="">숫자 선택</option>
+                                    <option value="7">7개</option>
+                                    <option value="8">8개</option>
+                                    <option value="9">9개</option>
+                                </select>
+                            </div>
+
+                            <div class="bg-slate-900 p-3 rounded border border-slate-800 space-y-2">
+                                <div class="font-bold text-sky-300">[조건 2] 지구형 행성의 총 개수는?</div>
+                                <select id="s5-c2" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+                                    <option value="">숫자 선택</option>
+                                    <option value="3">3개</option>
+                                    <option value="4">4개</option>
+                                    <option value="5">5개</option>
+                                </select>
+                            </div>
+
+                            <div class="bg-slate-900 p-3 rounded border border-slate-800 space-y-2">
+                                <div class="font-bold text-sky-300">[조건 3] 태양 표면의 흑점이 어둡게 보이는 이유는?</div>
+                                <select id="s5-c3" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+                                    <option value="">이유 기호 선택</option>
+                                    <option value="A">[A] 주변보다 온도가 높기 때문</option>
+                                    <option value="B">[B] 주변보다 온도가 낮기 때문</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Master Keypad -->
+                        <div class="bg-slate-900 p-4 rounded-xl border border-red-500/50 mt-4 text-center space-y-3">
+                            <label class="block text-xs font-bold text-amber-300">
+                                <i class="fa-solid fa-lock text-red-400 mr-1"></i> 마스터 지구 생환 코드 4자리 ([조건1 수치] + [조건2 수치] + [조건3 알파벳 기호 A/B] + 지구승인숫자 '1')
+                            </label>
+                            <div class="flex justify-center gap-2 max-w-xs mx-auto">
+                                <input type="text" id="s5-master-code" maxlength="4" placeholder="코드 입력" 
+                                    class="bg-slate-950 border border-red-500 rounded-lg px-4 py-2 font-orbitron text-center text-red-400 font-bold text-xl w-full focus:outline-none tracking-widest">
+                                <button onclick="checkStage5()" class="px-6 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold rounded-lg text-sm font-orbitron transition shadow-lg">
+                                    WARP
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkStage5() {
+            const c1 = document.getElementById('s5-c1').value;
+            const c2 = document.getElementById('s5-c2').value;
+            const c3 = document.getElementById('s5-c3').value;
+            const code = document.getElementById('s5-master-code').value.trim();
+
+            if (c1 === '8' && c2 === '4' && c3 === 'B' && code.toUpperCase() === '84B1') {
+                stopTimer();
+                playSound('victory');
+                gameState.stageCompleted[4] = true;
+                finishGame();
+            } else {
+                showFeedback('생환 코드 오류! [조건1~3] 선택 항목과 마스터 4자리 암호(84B1)를 다시 확인하세요.', false);
+            }
+        }
+
+        /* Hint System */
+        const stageHints = {
+            1: [
+                "태양은 스스로 빛을 내는 '항성'입니다.",
+                "행성은 태양 주위를 도는 8개 천체이며, 달은 행성 주위를 도는 '위성'입니다.",
+                "암호 공식: 자리1(1개) + 자리2(8개) + 자리3(달1+화성2=3) + 자리4(태양반대방향=5) ➔ 1835"
+            ],
+            2: [
+                "지구형 행성은 수, 금, 지, 화 4개입니다. 목성형 행성은 목, 토, 천, 해 4개입니다.",
+                "지구형 행성은 평균 밀도가 크고, 목성형 행성은 고리와 위성이 많습니다(3번).",
+                "질문 B 정답(3) + 지구형(4) + 목성형(4) ➔ 344"
+            ],
+            3: [
+                "흑점은 주변보다 온도가 낮아 어둡게 보입니다.",
+                "채층은 붉은색 얇은 대기층이며, 플레어는 흑점 인근의 대폭발 현상입니다.",
+                "승인 코드는 'SUN11' 입니다 (SUN + 흑점 주기 11년)."
+            ],
+            4: [
+                "로그 A: 두꺼운 이산화탄소 대기와 강한 온실효과 ➔ '금성'",
+                "로그 B: 붉은 표면, 극관 ➔ 화성 / 로그 C: 고리, 물에 뜸 ➔ 토성",
+                "로그 D: 누워서 공전, 청록색 ➔ 천왕성 / 암호는 [로그 A 행성의 영문 이름]입니다."
+            ],
+            5: [
+                "조건 1: 태양계 행성은 총 8개입니다.",
+                "조건 2: 지구형 행성은 총 4개입니다.",
+                "조건 3: 흑점은 주변보다 온도가 낮아서 어둡게 보입니다 [B]. ➔ 조합 암호: 84B1"
+            ]
+        };
+
+        function openHintModal() {
+            playSound('click');
+            const stg = gameState.currentStage;
+            const currentUsed = gameState.hintsUsed[stg] || 0;
+
+            if (currentUsed < 3) {
+                gameState.hintsUsed[stg] = currentUsed + 1;
+                document.getElementById('hud-hint-count').textContent = gameState.hintsUsed[stg];
+            }
+
+            const activeHints = stageHints[stg].slice(0, gameState.hintsUsed[stg]);
+            const modalBody = document.getElementById('hint-modal-body');
+
+            modalBody.innerHTML = activeHints.map((h, idx) => `
+                <div class="p-3 bg-slate-900 border border-amber-500/30 rounded-lg text-xs">
+                    <span class="font-bold text-amber-400 block mb-1">힌트 ${idx + 1} 단계:</span>
+                    <p class="text-gray-300">${h}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('hint-modal').classList.remove('hidden');
+        }
+
+        function closeHintModal() {
+            playSound('click');
+            document.getElementById('hint-modal').classList.add('hidden');
+        }
+
+        function openConceptModal() {
+            playSound('click');
+            document.getElementById('concept-modal').classList.remove('hidden');
+        }
+
+        function closeConceptModal() {
+            playSound('click');
+            document.getElementById('concept-modal').classList.add('hidden');
+        }
+
+        function finishGame() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('hud-header').classList.add('hidden');
+            document.getElementById('screen-victory').classList.remove('hidden');
+
+            const totalSec = gameState.elapsedSeconds;
+            const mins = Math.floor(totalSec / 60);
+            const secs = Math.floor(totalSec % 60);
+            const ms = Math.floor((totalSec % 1) * 10);
+            const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${ms}`;
+
+            let totalHints = 0;
+            Object.values(gameState.hintsUsed).forEach(cnt => totalHints += cnt);
+
+            let grade = 'S CLASS';
+            if (totalSec > 600 || totalHints > 5) grade = 'A CLASS';
+            if (totalSec > 900 || totalHints > 8) grade = 'B CLASS';
+
+            document.getElementById('victory-final-time').textContent = formattedTime;
+            document.getElementById('victory-hint-count').textContent = `${totalHints} 개`;
+            document.getElementById('victory-grade').textContent = grade;
+
+            document.getElementById('cert-team-name').textContent = gameState.teamName;
+            document.getElementById('cert-members').textContent = gameState.members.join(', ');
+            
+            const today = new Date();
+            document.getElementById('cert-date').textContent = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+        }
+
+        function restartGame() {
+            playSound('click');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
